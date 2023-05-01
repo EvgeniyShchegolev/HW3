@@ -31,27 +31,29 @@ class GoodsList {
     ) {
         this.#goods = goods;
         this.filter = filter;
-        this.#filter();
         this.sortPrice = sortPrice;
         this.sortDir = sortDir;
-        this.#sortPrice();
     }
 
     get list() {
-        return this.#goods;
+        this.#filter();
+        this.#sortPrice();
+        return this.goods;
     }
 
     #filter() {
         if (this.filter) {
-            this.#goods = this.#goods.filter(good => this.filter.test(good.name));
+            this.goods = this.#goods.filter(good => this.filter.test(good.name));
+        } else {
+            this.goods = Array.from(this.#goods);
         }
     }
 
     #sortPrice() {
         if (this.sortPrice && this.sortDir) {
-            this.#goods.sort((goodPrev, goodNext) => goodPrev.price - goodNext.price);
+            this.goods.sort((goodPrev, goodNext) => goodPrev.price - goodNext.price);
         } else if (this.sortPrice) {
-            this.#goods.sort((goodPrev, goodNext) => goodNext.price - goodPrev.price);
+            this.goods.sort((goodPrev, goodNext) => goodNext.price - goodPrev.price);
         }
     }
 
@@ -60,7 +62,13 @@ class GoodsList {
     }
 
     remove(id) {
-        this.#goods.splice(this.#goods.findIndex(good => good.id === id), 1);
+        let index = this.#goods.findIndex(good => good.id === id);
+        if (index > 0) {
+            this.#goods.splice(index, 1);
+        } else {
+            return "not found";
+        }
+        
     }
 }
 
@@ -71,21 +79,14 @@ class BasketGood extends Good {
         amount,
     ) {
         super(
-            id,
-            name,
-            description,
-            sizes,
-            price,
-            available,
+            good.id,
+            good.name,
+            good.description,
+            good.sizes,
+            good.price,
+            good.available,
         );
-        this.id = good.id;
-        this.name = good.name;
-        this.description = good.description;
-        this.sizes = good.sizes;
-        this.price = good.price;
-        this.available = good.available;
-
-        this.amount = Number(amount);
+        this.amount = amount;
     }
 }
 
@@ -102,27 +103,29 @@ class Basket {
     }
 
     get totalSum() {
-        // let goods_ = this.goods.map(good => ({amount: good.amount, price: good.price}));
-        // goods_.forEach((good) => {good.amount = good.amount * good.price});
-        // return goods_.reduce((good, next) => ({amount: good.amount + next.amount})).amount;
-        
         return this.goods
         .map(good => ({sum: good.amount * good.price}))
         .reduce((good, next) => ({sum: good.sum + next.sum})).sum;
     }
 
     add(good, amount) {
-        if (!this.goods.find(good_ => (good_.id === good.id) ? good_.amount += amount : false)) {
+        let index = this.goods.findIndex(good_ => (good_.id === good.id));
+        if (index > 0) {
+            this.goods[index].amount += amount;
+        } else {
             this.goods.push(new BasketGood(good, amount));
         }
     }
 
     remove(good, amount) {
-        let indexRemove = this.goods.findIndex(good_ => (good_.id === good.id));
-        if (this.goods[indexRemove].amount > amount) {
-            this.goods[indexRemove].amount -= amount;
+        let index = this.goods.findIndex(good_ => (good_.id === good.id));
+        if (index < 0) {
+            return "not found";
+        }
+        if (this.goods[index].amount > amount) {
+            this.goods[index].amount -= amount;
         } else {
-            this.goods.splice(indexRemove, 1);
+            this.goods.splice(index, 1);
         }
     }
 
@@ -131,9 +134,7 @@ class Basket {
     }
 
     removeUnavailable() {
-        this.goods.forEach((good, index) => {
-            (good.available === false) ? this.goods.splice(index, 1) : false
-        });
+        this.goods = this.goods.filter(good => good.available);
     }
 }
 
@@ -223,27 +224,27 @@ let list3 = new GoodsList(
 let basket1 = new Basket(goods = []);
 
 
-good1.setAvailable(false);
+// good1.setAvailable(false);
 
-list1.add(good5);
-list3.remove(5);
+// list1.add(good5);
+list3.remove(6);
 
-console.log(list2.list);
+// console.log(list1.list);
 
-basket1.add(good1, 10);
-basket1.add(good3, 15);
-basket1.add(good4, 20);
+// basket1.add(good1, 10);
+// basket1.add(good3, 15);
+// basket1.add(good4, 20);
 
-basket1.remove(good1, 5);
+// basket1.remove(good1, 15);
 
-basket1.removeUnavailable();
+// basket1.removeUnavailable();
 
-basket1.clear();
+// basket1.clear();
 
-basket1.add(good2, 5);
+// basket1.add(good2, 5);
 
-basket1.add(good3, 30);
+// basket1.add(good3, 30);
 
-console.log(basket1.goods);
+// console.log(basket1.goods);
 
-console.log(`Общее количество: ${basket1.totalAmount}.\nСумма всего: ${basket1.totalSum}.`);
+// console.log(`Общее количество: ${basket1.totalAmount}.\nСумма всего: ${basket1.totalSum}.`);
